@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base href="http://demos.telerik.com/kendo-ui/grid/detailtemplate">
+    <style>html { font-size: 12px; font-family: Arial, Helvetica, sans-serif; }</style>
+    <title>Detail</title>
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.common-material.min.css" />
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.material.min.css" />
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.dataviz.min.css" />
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.dataviz.material.min.css" />
+
+    <script src="http://cdn.kendostatic.com/2015.1.408/js/jquery.min.js"></script>
+    <script src="http://cdn.kendostatic.com/2015.1.408/js/jszip.min.js"></script>
+    <script src="http://cdn.kendostatic.com/2015.1.408/js/kendo.all.min.js"></script>
+</head>
+<body>
+
+<div id="example">
+
+    <input id="color" value="1" />
+    <input id="colorSub" />
+
+    <!-- Persist State -->
+    <div class="box">
+        <a href="#" class="k-button" id="save">Save State</a>
+        <a href="#" class="k-button" id="load">Load State</a>
+    </div>
+
+    <div id="grid"></div>
+
+    <!-- To add toolbar at top to filter the grid data based on drop down selection -->
+    <script type="text/x-kendo-template" id="search">
+        <div class="toolbar">
+            <label class="category-label" for="category">Show products by category:</label>
+            <input type="search" id="category" style="width: 150px"/>
+        </div>
+    </script>
+
+    <!-- To add n number of tabs to the expansion of each row -->
+    <script type="text/x-kendo-template" id="expand-template">
+        <div class="tabstrip">
+            <ul>
+                <!-- <li>
+                    Orders
+                </li> -->
+                <li class="k-state-active">
+                    Contact Information
+                </li>
+            </ul>
+            <!--<div>
+                <div class="orders"></div>
+            </div>-->
+            <div>
+                <div class='employee-details'>
+                    <ul>
+                        <li><label>Product ID:</label>#= ProductID #</li>
+                        <li><label>Product Name:</label>#= ProductName #</li>
+                        <li><label>Unit Price:</label>#= UnitPrice #</li>
+                        <li><label>Quantity :</label>#= QuantityPerUnit #</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </script>
+
+    <script>
+        $(document).ready(function() {
+
+            // Dropdown block
+            var dropdownData = [
+                { text: "Black", value: "1" },
+                { text: "Orange", value: "2" },
+                { text: "Grey", value: "3" }
+            ];
+
+            // create DropDownList from input HTML element
+            $("#color").kendoDropDownList({
+                dataTextField: "text",
+                dataValueField: "value",
+                dataSource: dropdownData,
+                index: 0,
+                change: onChange
+            });
+
+            $("#colorSub").kendoDropDownList({});
+
+            function onChange() {
+                var value = $("#color").val();
+
+                if (parseInt(value)==3) {
+                    $("#colorSub").kendoDropDownList({
+                        dataTextField: "CategoryName",
+                        dataValueField: "CategoryID",
+                        autoBind: false,
+                        optionLabel: "All",
+                        dataSource: {
+                            type: "odata",
+                            severFiltering: true,
+                            transport: {
+                                read: "http://demos.telerik.com/kendo-ui/service/Northwind.svc/Categories"
+                            }
+                        },
+                        change: function() {
+                            // var value = this.value();
+                            // if (value) {
+                            //     grid.data("kendoGrid").dataSource.filter({ field: "CategoryID", operator: "eq", value: parseInt(value) });
+                            // } else {
+                            //     grid.data("kendoGrid").dataSource.filter({});
+                            // }
+                            grid.data("kendoGrid").dataSource.filter({});
+                        }
+                    });
+                } else {
+                    $("#colorSub").kendoDropDownList({});
+                }
+            }
+            // Dropdown block
+
+            var grid = $("#grid").kendoGrid({
+
+                // toolbar: ["excel"],
+                // excel: {
+                //     fileName: "Kendo UI Grid Export.xlsx",
+                //     proxyURL: "http://demos.telerik.com/kendo-ui/service/export",
+                //     filterable: true
+                // },
+                selectable: "multiple cell",
+                allowCopy: true,
+                dataSource: {
+                    type: "odata",
+                    transport: {
+                        read: "http://demos.telerik.com/kendo-ui/service/Northwind.svc/Products"
+                    },
+                    pageSize: 20,
+                    serverPaging: true,
+                    serverSorting: true
+                },
+                height: 550,
+                sortable: true,
+                groupable: true,
+                reorderable: true,
+                resizable: true,
+                columnMenu: true,
+                filterable: {
+                    mode: "row"
+                },
+                pageable: {
+                    refresh: true,
+                    pageSizes: true,
+                    buttonCount: 5
+                },
+                toolbar: kendo.template($("#search").html()), // To add toolbar at top to filter the grid data based on drop down selection
+                detailTemplate: kendo.template($("#expand-template").html()), // To add n number of tabs to the expansion of each row
+                detailInit: detailInit, // To add n number of tabs to the expansion of each row
+                dataBound: function() {
+//                    this.expandRow(this.tbody.find("tr.k-master-row").first());
+                },
+                columns: [
+                    { field: "CategoryID", title:"Category ID", width:100 },
+                    { field: "ProductID", title: "Product ID", width: 100 },
+                    { field: "ProductName", title: "Product Name" },
+                    { field: "UnitPrice", title: "Unit Price", width: 150 },
+                    { field: "QuantityPerUnit", title: "Quantity Per Unit" }
+                ]
+
+            });
+
+            // To add toolbar at top to filter the grid data based on drop down selection
+            var dropDown = grid.find("#category").kendoDropDownList({
+                dataTextField: "CategoryName",
+                dataValueField: "CategoryID",
+                autoBind: false,
+                optionLabel: "All",
+                dataSource: {
+                    type: "odata",
+                    severFiltering: true,
+                    transport: {
+                        read: "http://demos.telerik.com/kendo-ui/service/Northwind.svc/Categories"
+                    }
+                },
+                change: function() {
+                    var value = this.value();
+                    if (value) {
+                        grid.data("kendoGrid").dataSource.filter({ field: "CategoryID", operator: "eq", value: parseInt(value) });
+                    } else {
+                        grid.data("kendoGrid").dataSource.filter({});
+                    }
+                }
+            });
+
+            var grid1 = $("#grid").data("kendoGrid");
+
+            $("#save").click(function (e) {
+                e.preventDefault();
+                localStorage["kendo-grid-options"] = kendo.stringify(grid1.getOptions());
+            });
+
+            $("#load").click(function (e) {
+                e.preventDefault();
+                var options = localStorage["kendo-grid-options"];
+                if (options) {
+                    grid1.setOptions(JSON.parse(options));
+                }
+            });
+        });
+
+        function detailInit(e) {
+            var detailRow = e.detailRow;
+
+            detailRow.find(".tabstrip").kendoTabStrip({
+                animation: {
+                    open: { effects: "fadeIn" }
+                }
+            });
+
+            /*detailRow.find(".orders").kendoGrid({
+                dataSource: {
+                    type: "odata",
+                    transport: {
+                        read: "http://demos.telerik.com/kendo-ui/service/Northwind.svc/Orders"
+                    },
+                    serverPaging: true,
+                    serverSorting: true,
+                    serverFiltering: true,
+                    pageSize: 7,
+                    filter: { field: "EmployeeID", operator: "eq", value: e.data.EmployeeID }
+                },
+                scrollable: false,
+                sortable: true,
+                pageable: true,
+                columns: [
+                    { field: "OrderID", title:"ID", width: "70px" },
+                    { field: "ShipCountry", title:"Ship Country", width: "110px" },
+                    { field: "ShipAddress", title:"Ship Address" },
+                    { field: "ShipName", title: "Ship Name", width: "300px" }
+                ]
+            });*/
+        }
+    </script>
+    <style>
+        .k-detail-cell .k-tabstrip .k-content {
+            padding: 0.2em;
+        }
+        .employee-details ul
+        {
+            list-style:none;
+            font-style:italic;
+            margin: 15px;
+            padding: 0;
+        }
+        .employee-details ul li
+        {
+            margin: 0;
+            line-height: 1.7em;
+        }
+
+        .employee-details label
+        {
+            display:inline-block;
+            width:90px;
+            padding-right: 10px;
+            text-align: right;
+            font-style:normal;
+            font-weight:bold;
+        }
+        #grid .k-grid-toolbar
+        {
+            padding: .6em 1.3em;
+        }
+        .category-label
+        {
+            vertical-align: middle;
+            padding-right: .5em;
+        }
+        #category
+        {
+            vertical-align: middle;
+        }
+        .toolbar {
+            float: right;
+        }
+    </style>
+</div>
+
+
+</body>
+</html>

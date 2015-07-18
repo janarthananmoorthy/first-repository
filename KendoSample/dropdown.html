@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base href="http://demos.telerik.com/kendo-ui/dropdownlist/angular">
+    
+    <title></title>
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.common-material.min.css" />
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.materialblack.min.css" />
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.dataviz.min.css" />
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.1.408/styles/kendo.dataviz.materialblack.min.css" />
+
+    <script src="http://cdn.kendostatic.com/2015.1.408/js/jquery.min.js"></script>
+    <script src="http://cdn.kendostatic.com/2015.1.408/js/angular.min.js"></script>
+    <script src="http://cdn.kendostatic.com/2015.1.408/js/kendo.all.min.js"></script>
+</head>
+<body>
+<div id="example" ng-app="KendoDemos">
+<div ng-controller="MyCtrl">
+  <label>Kendo Drop Down: </label>
+  <input kendo-drop-down-list 
+        ng-model="selectedSport" 
+        k-auto-bind="true"
+        k-ng-delay="sports"
+        k-data-source="sports" 
+        k-data-value-field="'id'"
+        k-data-text-field="'name'"
+        k-option-label="'<<create>>'"
+        k-select="dropdownSelect"
+        k-on-change="dropdownChange(selectedSport);" />
+        <!-- select - call before change-->
+  <button ng-click='send()'>Submit</button>
+
+
+
+  <br>
+
+  <label>Date Picker: </label>
+  <input kendo-date-picker />
+  <br>
+
+  <label>Numeric Text Box: </label>
+  <input kendo-numerictextbox 
+         k-min="1" 
+         k-max="10" 
+         k-up-arrow-text="'Increment'" 
+         k-down-arrow-text="'Decrement'">
+</div>
+
+<script>
+  angular.module("KendoDemos", [ "kendo.directives" ])
+      .controller("MyCtrl", function($scope){
+          $scope.productsDataSource = {
+            type: "odata",
+            serverFiltering: true,
+            transport: {
+                read: {
+                    url: "http://demos.telerik.com/kendo-ui/service/Northwind.svc/Products",
+                }
+            }
+        };
+    
+        $scope.selectedSport = 2;
+        $scope.sports= [
+          { id: 1, name: 'Basketball' },
+          { id: 2, name: 'Football' },
+          { id: 3, name: 'Tennis' }
+        ];
+
+        $scope.send = function () {
+          alert($scope.selectedSport);
+          $scope.selectedSport = 1;
+
+        };
+
+        $scope.dropdownObject= '';
+        $scope.dropdownSelect = function() {
+          console.log(this);
+          $scope.dropdownObject=this;
+        };
+
+        $scope.dropdownChange = function(obj) {
+            console.log(obj);
+            if (!obj) {
+
+              $scope.sports.push({id:4,name:"Cricket"});
+              $scope.selectedSport=4;
+
+              $scope.dropdownObject.dataSource.read();
+            }
+        };
+    
+      })
+</script>
+
+
+</body>
+</html>
